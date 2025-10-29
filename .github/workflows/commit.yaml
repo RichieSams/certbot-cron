@@ -1,0 +1,28 @@
+name: Commit Testing
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Force checking out a full tree, so we get tags and previous commits
+          # This is necessary for svu to work properly
+          fetch-depth: 0
+      - name: Setup SVU
+        id: svu
+        uses: obfu5c8/action-svu@v1.0.0
+        with:
+          svu-version: 1.12.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          tags: ghcr.io/richiesams/certbot_cron:${{ steps.svu.outputs.version }}
