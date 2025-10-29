@@ -1,0 +1,31 @@
+name: Merge
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup SVU
+        id: svu
+        uses: obfu5c8/action-svu@v1.0.0
+        with:
+          svu-version: 1.12.0
+      - name: Create git tag
+        run: git tag ${{ steps.svu.outputs.version }}
+      - name: Push tag to origin
+        run: git push origin ${{ steps.svu.outputs.version }}
+  # Github doesn't allow recursive triggering. That is, a given trigger can't trigger another trigger
+  # IE this merge to main won't cause the on_tag.yaml workflow to fire
+  # Therefore, we call release ourselves
+  release:
+    uses: ./.github/workflows/release.yaml
